@@ -527,43 +527,6 @@ func (rf *Raft) SendHeartBeats() {
 	}
 }
 
-func (rf *Raft) HandleLogResponse(rep LogRequestReply) {
-	if rf.killed() == true {
-		return
-	}
-
-	log.Printf("LOGRESPONSE[%d-%d]: %v\n", rf.me, rep.FId, rep)
-	rf.cancelElecTimerChan <- true
-
-	term := rep.Fterm
-	followerId := rep.FId
-	ack := rep.Ack
-	success := rep.Success
-
-	rf.RLock()
-	currentTerm := rf.currentTerm
-	currentRole := rf.currentRole
-	rf.RUnlock()
-
-	if term == currentTerm && currentRole == leader {
-		if success == true && ack >= rf.ackedLength[followerId] {
-			rf.sentLength[followerId] = ack
-			rf.ackedLength[followerId] = ack
-			rf.CommitLogEntries()
-		} else if rf.sentLength[followerId] > 0 {
-			rf.sentLength[followerId] = rf.sentLength[followerId] - 1
-			rf.ReplicateLog(rf.me, followerId, rep.Type)
-		}
-	} else if term > currentTerm {
-		rf.Lock()
-		rf.currentTerm = term
-		rf.currentRole = follower
-		rf.votedFor = -1
-		rf.Unlock()
-		//fmt.Fprintf(file, "LOGRESPONSE[%d-%d] cancel ElecTimer cuz > term at %d\n", rf.me, rep.FId, int(time.Now().UnixNano()))
-	}
-}
-
 func (rf *Raft) ReplicateLog(leaderId, followerId int, data string) {
 	//fmt.Fprintf(file, "Replicate log [%d-%d]: %s\n", leaderId, followerId, data)
 
