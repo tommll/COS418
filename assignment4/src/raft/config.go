@@ -9,7 +9,7 @@ package raft
 //
 
 import (
-	"assign3/labrpc"
+	"assign4/labrpc"
 	"log"
 	"runtime"
 	"sync"

@@ -543,29 +543,43 @@ func TestPersist1(t *testing.T) {
 	}
 
 	cfg.one(12, servers)
+	log.Println("!!!!!!!!!!FLAG 1 PASSED")
 
 	leader1 := cfg.checkOneLeader()
+	log.Printf("DISCONNECT LEADER %d\n", leader1)
 	cfg.disconnect(leader1)
+
+	log.Printf("CONNECT LEADER %d\n", leader1)
 	cfg.start1(leader1)
 	cfg.connect(leader1)
 
 	cfg.one(13, servers)
+	log.Println("!!!!!!!!!!FLAG 2 PASSED")
 
 	leader2 := cfg.checkOneLeader()
+	log.Printf("DISCONNECT LEADER %d\n", leader2)
 	cfg.disconnect(leader2)
 	cfg.one(14, servers-1)
+	log.Println("!!!!!!!!!!FLAG 3 PASSED")
+
+	log.Printf("CONNECT LEADER %d\n", leader2)
 	cfg.start1(leader2)
 	cfg.connect(leader2)
 
 	cfg.wait(4, servers, -1) // wait for leader2 to join before killing i3
 
 	i3 := (cfg.checkOneLeader() + 1) % servers
+	log.Printf("DISCONNECT SERVER %d\n", i3)
 	cfg.disconnect(i3)
 	cfg.one(15, servers-1)
+	log.Println("!!!!!!!!!!FLAG 4 PASSED")
+
+	log.Printf("CONNECT SERVER %d\n", i3)
 	cfg.start1(i3)
 	cfg.connect(i3)
 
 	cfg.one(16, servers)
+	log.Println("!!!!!!!!!!FLAG 5 PASSED")
 
 	fmt.Println("... Passed")
 }
@@ -576,42 +590,85 @@ func TestPersist2(t *testing.T) {
 	defer cfg.cleanup()
 
 	fmt.Println("Test: more persistence...")
+	var randServer int
 
 	index := 1
 	for iters := 0; iters < 5; iters++ {
 		cfg.one(10+index, servers)
+		log.Printf("FLAG A (%d) PASSED\n", iters)
+
 		index++
 
 		leader1 := cfg.checkOneLeader()
+		log.Printf("FLAG B (%d) PASSED\n", iters)
 
+		randServer = (leader1 + 1) % servers
+		log.Printf("DISCONNECT SERVER %d\n", randServer)
 		cfg.disconnect((leader1 + 1) % servers)
+
+		randServer = (leader1 + 2) % servers
+		log.Printf("DISCONNECT SERVER %d\n", randServer)
 		cfg.disconnect((leader1 + 2) % servers)
 
 		cfg.one(10+index, servers-2)
+		log.Printf("FLAG C (%d) PASSED\n", iters)
+
 		index++
 
-		cfg.disconnect((leader1 + 0) % servers)
-		cfg.disconnect((leader1 + 3) % servers)
-		cfg.disconnect((leader1 + 4) % servers)
+		randServer = (leader1 + 0) % servers
+		log.Printf("DISCONNECT SERVER %d\n", randServer)
+		cfg.disconnect(randServer)
 
-		cfg.start1((leader1 + 1) % servers)
-		cfg.start1((leader1 + 2) % servers)
-		cfg.connect((leader1 + 1) % servers)
-		cfg.connect((leader1 + 2) % servers)
+		randServer = (leader1 + 3) % servers
+		log.Printf("DISCONNECT SERVER %d\n", randServer)
+		cfg.disconnect(randServer)
+
+		randServer = (leader1 + 4) % servers
+		log.Printf("DISCONNECT SERVER %d\n", randServer)
+		cfg.disconnect(randServer)
+
+		randServer = (leader1 + 1) % servers
+		log.Printf("START SERVER %d\n", randServer)
+		cfg.start1(randServer)
+
+		randServer = (leader1 + 2) % servers
+		log.Printf("START SERVER %d\n", randServer)
+		cfg.start1(randServer)
+
+		randServer = (leader1 + 1) % servers
+		log.Printf("CONNECT SERVER %d\n", randServer)
+		cfg.connect(randServer)
+
+		randServer = (leader1 + 2) % servers
+		log.Printf("CONNECT SERVER %d\n", randServer)
+		cfg.connect(randServer)
 
 		time.Sleep(RaftElectionTimeout)
 
-		cfg.start1((leader1 + 3) % servers)
-		cfg.connect((leader1 + 3) % servers)
+		randServer = (leader1 + 3) % servers
+		log.Printf("START SERVER %d\n", randServer)
+		cfg.start1(randServer)
+
+		randServer = (leader1 + 3) % servers
+		log.Printf("CONNECT SERVER %d\n", randServer)
+		cfg.connect(randServer)
 
 		cfg.one(10+index, servers-2)
+		log.Printf("FLAG D (%d) PASSED\n", iters)
+
 		index++
 
-		cfg.connect((leader1 + 4) % servers)
-		cfg.connect((leader1 + 0) % servers)
+		randServer = (leader1 + 4) % servers
+		log.Printf("CONNECT SERVER %d\n", randServer)
+		cfg.connect(randServer)
+
+		randServer = (leader1 + 0) % servers
+		log.Printf("CONNECT SERVER %d\n", randServer)
+		cfg.connect(randServer)
 	}
 
 	cfg.one(1000, servers)
+	log.Printf("FLAG E PASSED\n")
 
 	fmt.Println("... Passed")
 }
@@ -624,24 +681,45 @@ func TestPersist3(t *testing.T) {
 	fmt.Println("Test: partitioned leader and one follower crash, leader restarts...")
 
 	cfg.one(101, 3)
+	log.Println("FLAG 1 PASSED")
 
 	leader := cfg.checkOneLeader()
-	cfg.disconnect((leader + 2) % servers)
+	log.Println("FLAG 2 PASSED")
+
+	randServer := (leader + 2) % servers
+	log.Printf("DISCONNECT SERVER %d\n", randServer)
+	cfg.disconnect(randServer)
 
 	cfg.one(102, 2)
+	log.Println("FLAG 3 PASSED")
 
-	cfg.crash1((leader + 0) % servers)
-	cfg.crash1((leader + 1) % servers)
-	cfg.connect((leader + 2) % servers)
-	cfg.start1((leader + 0) % servers)
-	cfg.connect((leader + 0) % servers)
+	randServer = (leader + 0) % servers
+	log.Printf("CRASH SERVER %d\n", randServer)
+	cfg.crash1(randServer)
+
+	randServer = (leader + 1) % servers
+	log.Printf("CRASH SERVER %d\n", randServer)
+	cfg.crash1(randServer)
+
+	randServer = (leader + 2) % servers
+	log.Printf("CONNECT SERVER %d\n", randServer)
+	cfg.connect(randServer)
+
+	randServer = (leader + 0) % servers
+	log.Printf("START SERVER %d\n", randServer)
+	cfg.start1(randServer)
+	cfg.connect(randServer)
 
 	cfg.one(103, 2)
+	log.Println("FLAG 4 PASSED")
 
-	cfg.start1((leader + 1) % servers)
+	randServer = (leader + 1) % servers
+	log.Printf("CRASH SERVER %d\n", randServer)
+	cfg.start1(randServer)
 	cfg.connect((leader + 1) % servers)
 
 	cfg.one(104, servers)
+	log.Println("FLAG 5 PASSED")
 
 	fmt.Println("... Passed")
 }

@@ -120,11 +120,9 @@ func (rf *Raft) persist() {
 	// Example:
 	w := new(bytes.Buffer)
 	e := gob.NewEncoder(w)
-	rf.RLock()
 	e.Encode(rf.currentTerm)
 	e.Encode(rf.votedFor)
 	e.Encode(rf.log)
-	rf.RUnlock()
 	data := w.Bytes()
 	rf.persister.SaveRaftState(data)
 
@@ -212,6 +210,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 		}
 		log.Printf("MESSAGE: %v, log(before): %v\n", message, rf.log)
 		rf.log = append(rf.log, message)
+		rf.persist()
 		log.Printf("MESSAGE: %v, log(after): %v\n", message, rf.log)
 
 		rf.ackedLength[rf.me] = len(rf.log)
@@ -219,9 +218,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 
 		for peerId := 0; peerId < len(rf.peers); peerId++ {
 			if peerId != rf.me {
-				go func(peerId int) {
-					rf.ReplicateLog(peerId)
-				}(peerId)
+				go rf.ReplicateLog(peerId)
 			}
 		}
 
@@ -322,6 +319,7 @@ func (rf *Raft) StartElection() {
 	rf.currentTerm++
 	rf.currentRole = candidate
 	rf.votedFor = rf.me
+	rf.persist()
 	rf.votesReceived[rf.me] = 1
 	logLength := len(rf.log)
 	lastTerm := 0
@@ -439,6 +437,7 @@ func (rf *Raft) ReceiveVoteRequest(args VoteRequestArgs, reply *VoteRequestReply
 
 	if logOk && termOk {
 		rf.votedFor = args.CId
+		rf.persist()
 		reply.Granted = true
 	} else {
 		reply.Granted = false
@@ -543,11 +542,13 @@ func (rf *Raft) AppendEntries(prefixLen, leaderCommit int, suffix []Entry) {
 
 		if rf.log[index].Term != suffix[index-prefixLen].Term {
 			rf.log = rf.log[:prefixLen]
+			rf.persist()
 		}
 	}
 
 	if prefixLen+len(suffix) > len(rf.log) {
 		rf.log = append(rf.log, suffix[(len(rf.log)-prefixLen):]...)
+		rf.persist()
 	}
 
 	if leaderCommit > rf.commitLength {
@@ -665,6 +666,7 @@ func (rf *Raft) BecomeFollower(term int) {
 	rf.currentTerm = term
 	rf.currentRole = follower
 	rf.votedFor = -1
+	rf.persist()
 }
 
 func Min(a, b int) int {
