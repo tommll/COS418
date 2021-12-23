@@ -18,7 +18,7 @@ package raft
 //
 
 import (
-	"assign3/labrpc"
+	"assign4/labrpc"
 	"bytes"
 	"encoding/gob"
 	"log"
