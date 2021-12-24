@@ -1,7 +1,7 @@
 # Assignments for COS 418
 
-- 1-1, 1-2, 1-3: passed 6/6 
-- 2: implement MVP version of Chandy Lamport snapshot algorithm
-- 3: passed 2/2
-- 4: part 1 (passed 3/7), part 2 (passed 2/3)
-- 5: passed TestBasic 
+- 1: (MapReduce) passed 6/6 
+- 2: (Chandy Lamport snapshot algorithm) implement a MVP version 
+- 3: (Raft leader election) passed 2/2
+- 4: (reach consensus on committed entries) passed 3/7, (persistent log back-up) passed 2/3
+- 5: (complete working of Raft) passed TestBasic 
