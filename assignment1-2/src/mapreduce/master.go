@@ -65,9 +65,9 @@ func Sequential(jobName string, files []string, nreduce int,
 			}
 		case reducePhase:
 			for i := 0; i < mr.nReduce; i++ {
-				fmt.Println("REDUCE WORKER", i, "th starting\n")
+				//fmt.Println("REDUCE WORKER", i, "th starting\n")
 				doReduce(mr.jobName, i, len(mr.files), reduceF)
-				fmt.Println("REDUCE WORKER", i, "th ended\n")
+				//fmt.Println("REDUCE WORKER", i, "th ended\n")
 			}
 		}
 	}, func() {

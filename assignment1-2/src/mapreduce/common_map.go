@@ -60,6 +60,7 @@ func doMap(
 				f.Write([]byte(data))
 			}
 			wg.Done()
+			fmt.Printf("Done mapping to %s\n", fileName)
 		}(startIdx, endIdx, reduceTask)
 	}
 
