@@ -1,4 +1,4 @@
-# Assignments for COS 418
+# Assignments for projects in COS 418 - Princeton Distributed System course
 
 * [x] (MapReduce) passed 6/6 
 * [x] (Chandy Lamport snapshot algorithm) implement a MVP version 
